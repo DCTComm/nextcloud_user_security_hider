@@ -70,9 +70,13 @@ class Application extends App implements IBootstrap {
 
 				// Example: Restrict access to settings pages for non-admin users
 				if (strpos($path, '/settings/user/security') === 0 && !in_array('admin', $userGroups)) {
+					
+					$restrictedTemplate = new Template(self::APP_ID, 'restricted');
+					$event->setTemplate($restrictedTemplate);
+
 					// Option 1: Redirect to home page
-					header('Location: ' . $urlGenerator->linkToRoute('files.view.index'));
-					exit();
+					// header('Location: ' . $urlGenerator->linkToRoute('files.view.index'));
+					// exit();
 					
 					// Option 2: Show an error template
 					// $errorTemplate = new Template(self::APP_ID, 'error');
@@ -84,16 +88,16 @@ class Application extends App implements IBootstrap {
 				}
 
 				// Example: Modify template content for specific user groups
-				if (in_array('restricted_view', $userGroups)) {
-					// You could load a different template
-					// $restrictedTemplate = new Template(self::APP_ID, 'restricted');
-					// $event->setTemplate($restrictedTemplate);
+				// if (in_array('restricted_view', $userGroups)) {
+				// 	// You could load a different template
+				// 	// $restrictedTemplate = new Template(self::APP_ID, 'restricted');
+				// 	// $event->setTemplate($restrictedTemplate);
 					
-					// Or modify the current template parameters
-					$params = $event->getTemplate()->getParams();
-					$params['restricted'] = true;
-					$event->getTemplate()->assignArray($params);
-				}
+				// 	// Or modify the current template parameters
+				// 	$params = $event->getTemplate()->getParams();
+				// 	$params['restricted'] = true;
+				// 	$event->getTemplate()->assignArray($params);
+				// }
 			}
 		});
 	}
