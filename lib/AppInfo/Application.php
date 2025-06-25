@@ -29,58 +29,75 @@ class Application extends App implements IBootstrap {
 		// Register for template rendering events to catch frontend navigation
 		$dispatcher = $server->get(IEventDispatcher::class);
 		$dispatcher->addListener(BeforeTemplateRenderedEvent::class, function(BeforeTemplateRenderedEvent $event) {
-			try {
-				$logger = $this->getContainer()->get(LoggerInterface::class);
-				$request = $this->getContainer()->get(\OCP\IRequest::class);
-				$userSession = $this->getContainer()->get(\OCP\IUserSession::class);
-				$groupManager = $this->getContainer()->get(IGroupManager::class);
+			$logger = $this->getContainer()->get(LoggerInterface::class);
+			$request = $this->getContainer()->get(\OCP\IRequest::class);
+			$userSession = $this->getContainer()->get(\OCP\IUserSession::class);
+			$groupManager = $this->getContainer()->get(IGroupManager::class);
+			$urlGenerator = $this->getContainer()->get(IURLGenerator::class);
+			
+			$user = $userSession && $userSession->getUser() ? $userSession->getUser() : null;
+			$userId = $user ? $user->getUID() : 'anonymous';
+			$userGroups = $user ? array_map(function($group) { 
+				return $group->getGID(); 
+			}, $groupManager->getUserGroups($user)) : [];
+			
+			$path = $request->getPathInfo();
+			$scriptName = $request->getScriptName();
+			$requestUri = $request->getRequestUri();
+			
+			// Only process if it's a frontend page (not an API call)
+			if (strpos($requestUri, '/ocs/') === false && 
+				strpos($requestUri, '/remote.php/') === false && 
+				strpos($requestUri, '/status.php') === false) {
 				
-				$user = $userSession && $userSession->getUser() ? $userSession->getUser() : null;
-				$userId = $user ? $user->getUID() : 'anonymous';
-				$userGroups = $user ? array_map(function($group) { 
-					return $group->getGID(); 
-				}, $groupManager->getUserGroups($user)) : [];
-				
-				$path = $request->getPathInfo();
-				$scriptName = $request->getScriptName();
-				$requestUri = $request->getRequestUri();
-				
-				// Only process if it's a frontend page (not an API call)
-				if (strpos($requestUri, '/ocs/') === false && 
-					strpos($requestUri, '/remote.php/') === false && 
-					strpos($requestUri, '/status.php') === false) {
-					
-					// Log the access attempt
-					$logger->debug(
-						sprintf('[DEBUG] Template rendering - User: %s, Groups: %s, Path: %s, Script: %s',
-							$userId,
-							implode(', ', $userGroups),
-							$path,
-							$scriptName
-						),
-						[
-							'user' => $userId,
-							'groups' => $userGroups,
-							'path' => $path,
-							'script' => $scriptName,
-							'request_uri' => $requestUri,
-							'timestamp' => date('c')
-						]
-					);
+				// Log the access attempt
+				$logger->debug(
+					sprintf('[DEBUG] Template rendering - User: %s, Groups: %s, Path: %s, Script: %s',
+						$userId,
+						implode(', ', $userGroups),
+						$path,
+						$scriptName
+					),
+					[
+						'user' => $userId,
+						'groups' => $userGroups,
+						'path' => $path,
+						'script' => $scriptName,
+						'request_uri' => $requestUri,
+						'timestamp' => date('c')
+					]
+				);
 
-					// Restrict access to security settings for non-admin users
-					if (strpos($path, '/settings/user/security') === 0 && !in_array('admin', $userGroups)) {
-						$restrictedTemplate = new Template(self::APP_ID, 'restricted');
-						$event->setTemplate($restrictedTemplate);
-						return;
-					}
+				// Example: Restrict access to settings pages for non-admin users
+				if (strpos($path, '/settings/user/security') === 0 && !in_array('admin', $userGroups)) {
+					
+					$restrictedTemplate = new Template(self::APP_ID, 'restricted');
+					$event->setTemplate($restrictedTemplate);
+
+					// Option 1: Redirect to home page
+					// header('Location: ' . $urlGenerator->linkToRoute('files.view.index'));
+					// exit();
+					
+					// Option 2: Show an error template
+					// $errorTemplate = new Template(self::APP_ID, 'error');
+					// $errorTemplate->assign('message', 'Access denied');
+					// $event->setTemplate($errorTemplate);
+					
+					// Option 3: Just prevent access with a simple message
+					// die('Access denied');
 				}
-			} catch (\Exception $e) {
-				$logger = $this->getContainer()->get(LoggerInterface::class);
-				$logger->error('Error in template rendering: ' . $e->getMessage(), [
-					'exception' => $e,
-					'app' => self::APP_ID
-				]);
+
+				// Example: Modify template content for specific user groups
+				// if (in_array('restricted_view', $userGroups)) {
+				// 	// You could load a different template
+				// 	// $restrictedTemplate = new Template(self::APP_ID, 'restricted');
+				// 	// $event->setTemplate($restrictedTemplate);
+					
+				// 	// Or modify the current template parameters
+				// 	$params = $event->getTemplate()->getParams();
+				// 	$params['restricted'] = true;
+				// 	$event->getTemplate()->assignArray($params);
+				// }
 			}
 		});
 	}
