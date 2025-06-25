@@ -8,12 +8,10 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCA\UserSecurityHider\Middleware\UserSecurityHiderMiddleware;
 use OCA\UserSecurityHider\Migration\InstallRepairStep;
 use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\AppFramework\Services\IInitialState;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'user_security_hider';
@@ -66,19 +64,6 @@ class Application extends App implements IBootstrap {
 				$c->get(LoggerInterface::class)
 			);
 		});
-
-		// Register the middleware service
-		$context->registerService(UserSecurityHiderMiddleware::class, function($c) {
-			return new UserSecurityHiderMiddleware(
-				$c->get(LoggerInterface::class),
-				$c->get(\OCP\IRequest::class),
-				$c->get(\OCP\IUserSession::class),
-				self::APP_ID
-			);
-		});
-
-		// Register as global middleware with high priority
-		$context->registerMiddleware(UserSecurityHiderMiddleware::class, true);
 	}
 
 	public function boot(IBootContext $context): void {
