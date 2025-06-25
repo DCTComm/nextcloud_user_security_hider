@@ -71,12 +71,12 @@ class Application extends App implements IBootstrap {
 				// Example: Restrict access to settings pages for non-admin users
 				if (strpos($path, '/settings/user/security') === 0 && !in_array('admin', $userGroups)) {
 					
-					$restrictedTemplate = new Template(self::APP_ID, 'restricted');
-					$event->setTemplate($restrictedTemplate);
+					// $restrictedTemplate = new Template(self::APP_ID, 'restricted');
+					// $event->setTemplate($restrictedTemplate);
 
 					// Option 1: Redirect to home page
-					// header('Location: ' . $urlGenerator->linkToRoute('files.view.index'));
-					// exit();
+					header('Location: ' . $urlGenerator->linkToRoute('files.view.index'));
+					exit();
 					
 					// Option 2: Show an error template
 					// $errorTemplate = new Template(self::APP_ID, 'error');
