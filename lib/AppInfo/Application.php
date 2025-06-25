@@ -11,6 +11,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\IGroupManager;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'user_security_hider';
@@ -28,8 +29,14 @@ class Application extends App implements IBootstrap {
 			$logger = $this->getContainer()->get(LoggerInterface::class);
 			$request = $this->getContainer()->get(\OCP\IRequest::class);
 			$userSession = $this->getContainer()->get(\OCP\IUserSession::class);
+			$groupManager = $this->getContainer()->get(IGroupManager::class);
 			
-			$userId = $userSession && $userSession->getUser() ? $userSession->getUser()->getUID() : 'anonymous';
+			$user = $userSession && $userSession->getUser() ? $userSession->getUser() : null;
+			$userId = $user ? $user->getUID() : 'anonymous';
+			$userGroups = $user ? implode(', ', array_map(function($group) { 
+				return $group->getGID(); 
+			}, $groupManager->getUserGroups($user))) : '';
+			
 			$path = $request->getPathInfo();
 			$scriptName = $request->getScriptName();
 			$requestUri = $request->getRequestUri();
@@ -39,13 +46,15 @@ class Application extends App implements IBootstrap {
 				strpos($requestUri, '/remote.php/') === false && 
 				strpos($requestUri, '/status.php') === false) {
 				$logger->debug(
-					sprintf('[DEBUG] Template rendering - User: %s, Path: %s, Script: %s',
+					sprintf('[DEBUG] Template rendering - User: %s, Groups: %s, Path: %s, Script: %s',
 						$userId,
+						$userGroups,
 						$path,
 						$scriptName
 					),
 					[
 						'user' => $userId,
+						'groups' => $userGroups,
 						'path' => $path,
 						'script' => $scriptName,
 						'request_uri' => $requestUri,
