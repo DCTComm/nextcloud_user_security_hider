@@ -3,17 +3,23 @@
 	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>user_security_hider</id>
 	<name>User Security Hider</name>
-	<summary>Hide user information from other users</summary>
-	<description>Hide user information from other users</description>
+	<summary>Hide security settings from non-admin users</summary>
+	<description><![CDATA[This app hides the security settings page from non-admin users and shows a friendly message instead.]]></description>
 	<version>1.0.0</version>
 	<licence>agpl</licence>
 	<author mail="danish.ahmed@dctcommunication.com" homepage="https://dctcommunication.com">Danish</author>
 	<namespace>UserSecurityHider</namespace>
-	<category>customization</category>
+	<category>security</category>
 	<bugs>https://github.com/dctcommunication/user_security_hider/issues</bugs>
 	<dependencies>
-		<nextcloud min-version="29" max-version="31"/>
+		<nextcloud min-version="27" max-version="28"/>
 	</dependencies>
+	<navigations>
+		<navigation>
+			<name>User Security Hider</name>
+			<route>user_security_hider.page.index</route>
+		</navigation>
+	</navigations>
 
 	<types>
 		<logging/>

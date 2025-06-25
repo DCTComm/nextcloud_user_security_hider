@@ -22,9 +22,13 @@
  */
 ?>
 
-<div class="section">
-    <h2><?php p($l->t('Security Settings')); ?></h2>
+<?php
+style('user_security_hider', 'style');
+?>
+
+<div id="security-settings-restricted" class="section">
+    <h2>Security Settings</h2>
     <div class="warning">
-        <p><?php p($l->t('Access to security settings is restricted. Please contact your administrator for access.')); ?></p>
+        <p>Access to security settings is restricted. Please contact your administrator for access.</p>
     </div>
 </div> 
