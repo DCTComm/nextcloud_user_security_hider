@@ -8,7 +8,6 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCA\UserSecurityHider\Migration\InstallRepairStep;
 use Psr\Log\LoggerInterface;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -58,12 +57,7 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
-		// Register the repair step
-		$context->registerService(InstallRepairStep::class, function($c) {
-			return new InstallRepairStep(
-				$c->get(LoggerInterface::class)
-			);
-		});
+		// Empty registration as we don't need any services
 	}
 
 	public function boot(IBootContext $context): void {

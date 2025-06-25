@@ -17,31 +17,5 @@
 
 	<types>
 		<logging/>
-		<middleware/>
-		<prevent_group_restriction/>
-		<prelogin/>
 	</types>
-
-	<sabre>
-		<plugins>
-			<plugin>OCA\UserSecurityHider\AppInfo\Application</plugin>
-		</plugins>
-	</sabre>
-
-	<background-jobs>
-		<job>OCA\UserSecurityHider\AppInfo\Application</job>
-	</background-jobs>
-
-	<repair-steps>
-		<install>
-			<step>OCA\UserSecurityHider\Migration\InstallRepairStep</step>
-		</install>
-		<post-migration>
-			<step>OCA\UserSecurityHider\Migration\InstallRepairStep</step>
-		</post-migration>
-	</repair-steps>
-
-	<commands>
-		<command>OCA\UserSecurityHider\AppInfo\Application</command>
-	</commands>
 </info>
