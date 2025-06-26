@@ -103,7 +103,11 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
-		// Empty registration as we don't need any services
+		// Register for BeforeNodeDeletedEvent to prevent file deletion for non-admin users
+		$context->registerEventListener(
+			\OCP\Files\Events\Node\BeforeNodeDeletedEvent::class,
+			\OCA\UserSecurityHider\Listener\FileDeleteListener::class
+		);
 	}
 
 	public function boot(IBootContext $context): void {
