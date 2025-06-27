@@ -103,11 +103,16 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
+		$logger = $this->getContainer()->get(\Psr\Log\LoggerInterface::class);
+		$logger->info('Registering FileDeleteListener for BeforeNodeDeletedEvent');
+		
 		// Register for BeforeNodeDeletedEvent to prevent file deletion for non-admin users
 		$context->registerEventListener(
 			\OCP\Files\Events\Node\BeforeNodeDeletedEvent::class,
 			\OCA\UserSecurityHider\Listener\FileDeleteListener::class
 		);
+		
+		$logger->info('FileDeleteListener registration completed');
 	}
 
 	public function boot(IBootContext $context): void {
