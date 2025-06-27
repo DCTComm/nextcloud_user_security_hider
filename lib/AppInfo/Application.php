@@ -108,15 +108,33 @@ class Application extends App implements IBootstrap {
 		
 		// Register for BeforeNodeDeletedEvent to prevent file deletion for non-admin users
 		$context->registerEventListener(
-			'OCP\Files\Events\Node\BeforeNodeDeletedEvent',
-			\OCA\UserSecurityHider\Listener\FileDeleteListener::class,
-			-100 // High priority to ensure it runs before other listeners
+			\OCP\Files\Events\Node\BeforeNodeDeletedEvent::class,
+			\OCA\UserSecurityHider\Listener\FileDeleteListener::class
+		);
+
+		// Also register for the generic file hooks to ensure we catch all delete operations
+		$context->registerEventListener(
+			'OCP\Files::preDelete',
+			\OCA\UserSecurityHider\Listener\FileDeleteListener::class
+		);
+
+		$context->registerEventListener(
+			'OCP\Files::preRename',
+			\OCA\UserSecurityHider\Listener\FileDeleteListener::class
 		);
 		
-		$logger->info('FileDeleteListener registration completed with high priority');
+		$logger->info('FileDeleteListener registration completed for multiple events');
 	}
 
 	public function boot(IBootContext $context): void {
-		// Additional boot initialization if needed
+		// Register file system hooks as well
+		$eventDispatcher = $this->getContainer()->get(IEventDispatcher::class);
+		$logger = $this->getContainer()->get(\Psr\Log\LoggerInterface::class);
+		
+		$eventDispatcher->addListener('OCP\Files::preDelete', function($event) use ($logger) {
+			$logger->info('Caught preDelete event through dispatcher');
+		});
+		
+		$logger->info('Boot completed, additional hooks registered');
 	}
 }

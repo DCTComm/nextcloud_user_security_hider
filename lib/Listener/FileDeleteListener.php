@@ -31,72 +31,78 @@ class FileDeleteListener implements IEventListener {
 
     public function handle(Event $event): void {
         try {
-            $this->logger->debug('FileDeleteListener handling event of type: ' . get_class($event));
-            
-            if (!($event instanceof BeforeNodeDeletedEvent)) {
-                $this->logger->debug('Event is not BeforeNodeDeletedEvent, skipping');
-                return;
-            }
-
-            $this->logger->info('Processing BeforeNodeDeletedEvent');
-            
-            $user = $this->userSession->getUser();
-            if (!$user) {
-                $this->logger->warning('No user found in session, blocking deletion');
-                throw new NotPermittedException('User not authenticated');
-            }
-
-            $userId = $user->getUID();
-            $node = $event->getNode();
-            $path = $node->getPath();
-            
-            $this->logger->info('Processing delete request', [
-                'user' => $userId,
-                'path' => $path,
-                'node_type' => $node->getType(),
+            $this->logger->debug('FileDeleteListener handling event', [
+                'event_class' => get_class($event),
                 'time' => time()
             ]);
 
-            // Check if user is an admin
-            $isAdmin = $this->groupManager->isInGroup($userId, 'admin');
-            
-            // If not an admin, prevent deletion
-            if (!$isAdmin) {
-                $this->logger->warning(
-                    'Blocking file deletion - user is not admin',
-                    [
-                        'user' => $userId,
-                        'path' => $path,
-                        'time' => time()
-                    ]
-                );
-                
-                throw new NotPermittedException(
-                    'Only administrators are allowed to delete files'
-                );
+            // Handle both node events and hook events
+            if ($event instanceof BeforeNodeDeletedEvent) {
+                $this->handleNodeEvent($event);
+            } else {
+                $this->handleHookEvent($event);
             }
-
-            // Log successful deletion for admin users
-            $this->logger->info(
-                'Allowing file deletion by admin',
-                [
-                    'user' => $userId,
-                    'path' => $path,
-                    'time' => time()
-                ]
-            );
             
         } catch (NotPermittedException $e) {
-            // Re-throw NotPermittedException
             throw $e;
         } catch (\Exception $e) {
-            // Log any unexpected errors
             $this->logger->error('Error in FileDeleteListener: ' . $e->getMessage(), [
                 'exception' => $e,
                 'time' => time()
             ]);
-            // Convert to NotPermittedException to prevent deletion
             throw new NotPermittedException('File deletion failed: ' . $e->getMessage());
+        }
+    }
+
+    private function handleNodeEvent(BeforeNodeDeletedEvent $event): void {
+        $user = $this->userSession->getUser();
+        if (!$user) {
+            $this->logger->warning('No user found in session, blocking deletion');
+            throw new NotPermittedException('User not authenticated');
+        }
+
+        $userId = $user->getUID();
+        $node = $event->getNode();
+        $path = $node->getPath();
+        
+        $this->logger->info('Processing node delete request', [
+            'user' => $userId,
+            'path' => $path,
+            'node_type' => $node->getType(),
+            'time' => time()
+        ]);
+
+        if (!$this->groupManager->isInGroup($userId, 'admin')) {
+            $this->logger->warning('Blocking file deletion - user is not admin', [
+                'user' => $userId,
+                'path' => $path,
+                'time' => time()
+            ]);
+            throw new NotPermittedException('Only administrators are allowed to delete files');
+        }
+    }
+
+    private function handleHookEvent($event): void {
+        $user = $this->userSession->getUser();
+        if (!$user) {
+            $this->logger->warning('No user found in session, blocking deletion (hook)');
+            throw new NotPermittedException('User not authenticated');
+        }
+
+        $userId = $user->getUID();
+        
+        $this->logger->info('Processing hook delete request', [
+            'user' => $userId,
+            'event' => get_class($event),
+            'time' => time()
+        ]);
+
+        if (!$this->groupManager->isInGroup($userId, 'admin')) {
+            $this->logger->warning('Blocking file deletion - user is not admin (hook)', [
+                'user' => $userId,
+                'time' => time()
+            ]);
+            throw new NotPermittedException('Only administrators are allowed to delete files');
         }
     }
 } 
