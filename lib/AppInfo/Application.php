@@ -19,6 +19,16 @@ use OCP\IURLGenerator;
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'user_security_hider';
 
+	/**
+	 * Array of paths that should be restricted for non-admin users
+	 */
+	protected $restrictedPaths = [
+		// Add restricted paths here
+		'/settings/user/security',
+		'/settings/user/sync-clients',
+		'/apps/files/trashbin',
+	];
+
 	public function __construct() {
 		parent::__construct(self::APP_ID);
 
@@ -69,22 +79,23 @@ class Application extends App implements IBootstrap {
 				);
 
 				// Example: Restrict access to settings pages for non-admin users
-				if (strpos($path, '/settings/user/security') === 0 && !in_array('admin', $userGroups)) {
-					
-					// $restrictedTemplate = new Template(self::APP_ID, 'restricted');
-					// $event->setTemplate($restrictedTemplate);
+				foreach ($this->restrictedPaths as $restrictedPath) {
+					if (strpos($path, $restrictedPath) === 0 && !in_array('admin', $userGroups)) {
+						// $restrictedTemplate = new Template(self::APP_ID, 'restricted');
+						// $event->setTemplate($restrictedTemplate);
 
-					// Option 1: Redirect to home page
-					header('Location: ' . $urlGenerator->linkToRoute('files.view.index'));
-					exit();
-					
-					// Option 2: Show an error template
-					// $errorTemplate = new Template(self::APP_ID, 'error');
-					// $errorTemplate->assign('message', 'Access denied');
-					// $event->setTemplate($errorTemplate);
-					
-					// Option 3: Just prevent access with a simple message
-					// die('Access denied');
+						// Option 1: Redirect to home page
+						header('Location: ' . $urlGenerator->linkToRoute('files.view.index'));
+						exit();
+						
+						// Option 2: Show an error template
+						// $errorTemplate = new Template(self::APP_ID, 'error');
+						// $errorTemplate->assign('message', 'Access denied');
+						// $event->setTemplate($errorTemplate);
+						
+						// Option 3: Just prevent access with a simple message
+						// die('Access denied');
+					}
 				}
 
 				// Example: Modify template content for specific user groups
